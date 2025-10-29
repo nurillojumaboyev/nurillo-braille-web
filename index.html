@@ -15,12 +15,13 @@
     .active { display: block; }
     input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
     .braille-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 200px; margin: 20px auto; }
-    .dot { width: 50px; height: 50px; background: #eee; border-radius: 50%; cursor: pointer; transition: 0.2s; }
-    .dot.active { background: #2c3e50; }
+    .dot { width: 50px; height: 50px; background: #eee; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; }
+    .dot.active { background: #2c3e50; color: white; }
     .result { margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-family: monospace; }
     .lesson { line-height: 1.8; }
-    .test-btn { background: #27ae60; margin: 5px; padding: 10px; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    .test-btn { background: #27ae60; margin: 5px; padding: 10px; color: white; border: none; border-radius: 8px; cursor: pointer; display: inline-block; }
     .stats { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .refresh-btn { background: #e74c3c; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -41,8 +42,8 @@
 
     <!-- Tarjima -->
     <div id="translate" class="section active">
-      <h3>Matn ↔ Braille</h3>
-      <textarea id="text-input" placeholder="Matn kiriting yoki Braille kod (1-2-4, 1-5)"></textarea>
+      <h3>Matn to Braille</h3>
+      <textarea id="text-input" placeholder="Matn kiriting (masalan: SALOM) yoki Braille kod (1-2-4, 1-5)"></textarea>
       <button class="btn" onclick="translateText()">Tarjima qilish</button>
       <div id="translate-result" class="result"></div>
     </div>
@@ -50,46 +51,49 @@
     <!-- O‘qish o‘rganish -->
     <div id="learn-read" class="section">
       <h3>O‘qishni o‘rganamiz</h3>
-      <p id="read-letter">Harf: <b>A</b> → Kod: <b>1</b></p>
+      <p id="read-letter"></p>
       <div class="braille-grid" id="read-grid"></div>
       <button class="btn" onclick="checkRead()">Tekshirish</button>
+      <button class="btn refresh-btn" onclick="startLearnRead()">Yangi harf</button>
       <div id="read-result" class="result"></div>
     </div>
 
     <!-- Yozish o‘rganish -->
     <div id="learn-write" class="section">
       <h3>Yozishni o‘rganamiz</h3>
-      <p id="write-letter">Harf: <b>A</b> → Yozing (o‘ngdan)</p>
+      <p id="write-letter"></p>
       <div class="braille-grid" id="write-grid"></div>
       <button class="btn" onclick="checkWrite()">Tekshirish</button>
+      <button class="btn refresh-btn" onclick="startLearnWrite()">Yangi harf</button>
       <div id="write-result" class="result"></div>
     </div>
 
     <!-- O‘yin: O‘qish -->
     <div id="game-read" class="section">
       <h3>O‘yin: O‘qish</h3>
-      <p id="game-read-letter">Harf: <b>B</b></p>
+      <p id="game-read-letter"></p>
       <div class="braille-grid" id="game-read-grid"></div>
       <button class="btn" onclick="checkGameRead()">Javob berish</button>
+      <button class="btn refresh-btn" onclick="startGameRead()">Yangi harf</button>
       <div id="game-read-result" class="result"></div>
     </div>
 
     <!-- Tiflopedagogika -->
     <div id="tiflopedagogika" class="section">
       <h3>Tiflopedagogika darslari</h3>
-      <div id="ped-lessons">Yuklanmoqda...</div>
+      <div id="ped-lessons"></div>
     </div>
 
     <!-- Tiflografiya -->
     <div id="tiflografiya" class="section">
       <h3>Tiflografiya darslari</h3>
-      <div id="graf-lessons">Yuklanmoqda...</div>
+      <div id="graf-lessons"></div>
     </div>
 
     <!-- Statistikalar -->
     <div id="stats" class="section">
       <h3>Statistikalar</h3>
-      <div class="stats" id="stats-content">Yuklanmoqda...</div>
+      <div class="stats" id="stats-content"></div>
     </div>
   </div>
 
@@ -108,22 +112,34 @@
     // Holat
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
 
-    // Darslar (to'liq botdan olingan)
+    // Darslar + Testlar
     const tiflopedagogika_lessons = {
-      1: { title: "1-dars: Maxsus pedagogika haqida ma'lumot", text: "Maxsus pedagogika — nogironligi bo‘lgan bolalar va kattalar ta’lim-tarbiyasi bilan shug‘ullanadigan fan..." },
-      2: { title: "2-dars: Tiflopedagogika usullari", text: "Tiflopedagogika ko‘zi ojiz bolalar uchun maxsus usullarni qo‘llaydi: Braille yozuvi, Audio darslar..." },
-      3: { title: "3-dars: O‘quv jarayonini moslashtirish", text: "Individual rejalashtirish, maxsus jihozlar..." },
-      4: { title: "4-dars: Ijtimoiy integratsiya", text: "Guruhli mashqlar, madaniy tadbirlar..." },
-      5: { title: "5-dars: Texnologiyalar va yordam vositalari", text: "Braille displey, ekran o‘qituvchisi..." }
+      1: { title: "1-dars: Maxsus pedagogika haqida", text: "Maxsus pedagogika — nogironligi bo‘lgan bolalar va kattalar ta’lim-tarbiyasi bilan shug‘ullanadigan fan...", 
+        tests: [["Kimlar bilan ishlaydi?", ["Bolalar", "Nogironlar"], "Nogironlar"], ["Qaysi fan?", ["Tiflopedagogika", "Fizika"], "Tiflopedagogika"]] },
+      2: { title: "2-dars: Tiflopedagogika usullari", text: "Braille, audio, taktil...", 
+        tests: [["Asosiy usul?", ["Braille", "Rasm"], "Braille"]] },
+      3: { title: "3-dars: Moslashtirish", text: "Individual reja, Braille printer...", 
+        tests: [["Nima kerak?", ["Reja", "Dam"], "Reja"]] },
+      4: { title: "4-dars: Ijtimoiy integratsiya", text: "Guruhli mashqlar...", 
+        tests: [["Nima muhim?", ["Guruh", "Yolg‘iz"], "Guruh"]] },
+      5: { title: "5-dars: Texnologiyalar", text: "Braille displey, Seeing AI...", 
+        tests: [["Texnologiya?", ["Braille displey", "Telefon"], "Braille displey"]] }
     };
 
     const tiflografiya_lessons = {
-      1: { title: "1-dars: Lui Brail va Brail yozuvi tarixi", text: "Louis Braille 1809–1852 yillarda yashagan..." },
-      2: { title: "2-dars: Brail tizimining asoslari", text: "6 nuqtali modul, 64 kombinatsiya..." },
-      3: { title: "3-dars: Harflar va raqamlar", text: "A = 1, B = 1-2, 1 = #1..." },
-      4: { title: "4-dars: Maxsus belgilari", text: "Bo‘sh joy = /, kapital = 6..." },
-      5: { title: "5-dars: Brailni amaliy qo‘llash", text: "Kitoblar, lift tugmalari, dorilar..." }
+      1: { title: "1-dars: Lui Brail", text: "Louis Braille 1809–1852...", 
+        tests: [["Qachon yashagan?", ["XIX asr", "XX asr"], "XIX asr"]] },
+      2: { title: "2-dars: Brail tizimi", text: "6 nuqta, 64 kombinatsiya...", 
+        tests: [["Necha nuqta?", ["6", "8"], "6"]] },
+      3: { title: "3-dars: Harflar", text: "A=1, B=1-2...", 
+        tests: [["A harfi?", ["1", "1-2"], "1"]] },
+      4: { title: "4-dars: Belgilar", text: "Bo‘sh joy=/, kapital=6...", 
+        tests: [["Bo‘sh joy?", ["/", "1"], "/"]] },
+      5: { title: "5-dars: Amaliyot", text: "Kitoblar, lift tugmalari...", 
+        tests: [["Qayerda ishlatiladi?", ["Kitoblar", "O‘yin"], "Kitoblar"]] }
     };
+
+    let currentTest = null;
 
     function show(section) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -166,6 +182,7 @@
       order.forEach(num => {
         const dot = document.createElement('div');
         dot.className = 'dot';
+        dot.textContent = num;
         dot.dataset.num = num;
         dot.onclick = () => toggleDot(dot);
         grid.appendChild(dot);
@@ -278,8 +295,50 @@
         <div style="margin:15px 0; padding:15px; border:1px solid #eee; border-radius:8px;">
           <b>${l.title}</b><br><br>
           <div class="lesson">${l.text.replace(/\n/g, '<br>')}</div>
+          ${l.tests ? `
+            <button class="test-btn" onclick="startTest(${i}, '${prefix}')">Testni boshlash</button>
+            <div id="test-${prefix}-${i}" style="margin-top:10px;"></div>
+          ` : ''}
         </div>
       `).join('');
+    }
+
+    function startTest(lessonId, prefix) {
+      const lessons = prefix === 'ped' ? tiflopedagogika_lessons : tiflografiya_lessons;
+      currentTest = { lessonId, prefix, q: 0, correct: 0 };
+      showTestQuestion();
+    }
+
+    function showTestQuestion() {
+      if (!currentTest) return;
+      const { lessonId, prefix, q } = currentTest;
+      const lessons = prefix === 'ped' ? tiflopedagogika_lessons : tiflografiya_lessons;
+      const test = lessons[lessonId].tests[q];
+      if (!test) {
+        document.getElementById(`test-${prefix}-${lessonId}`).innerHTML = 
+          `<b style="color:green;">Test tugadi! To‘g‘ri: ${currentTest.correct}/${lessons[lessonId].tests.length}</b>`;
+        currentTest = null;
+        return;
+      }
+      const [question, options, correct] = test;
+      const html = `
+        <p><b>${question}</b></p>
+        ${options.map(opt => `
+          <button class="test-btn" onclick="checkTestAnswer('${opt}', '${correct}', ${q})">${opt}</button>
+        `).join('')}
+      `;
+      document.getElementById(`test-${prefix}-${lessonId}`).innerHTML = html;
+    }
+
+    function checkTestAnswer(chosen, correct, q) {
+      if (chosen === correct) {
+        currentTest.correct++;
+        alert("To‘g‘ri!");
+      } else {
+        alert(`Xato! To‘g‘ri: ${correct}`);
+      }
+      currentTest.q++;
+      showTestQuestion();
     }
 
     // Boshlash
