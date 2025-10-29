@@ -54,7 +54,7 @@
       <div id="read-result" class="result"></div>
     </div>
 
-    <!-- Yozish o‘rganish -->
+    <!-- Yozish o‘rganish (KOD KO‘RINADI!) -->
     <div id="learn-write" class="section">
       <h3>Yozishni o‘rganamiz</h3>
       <p id="write-letter"></p>
@@ -74,7 +74,7 @@
       <div id="game-read-result" class="result"></div>
     </div>
 
-    <!-- O‘yin: Yozish (TO‘G‘IRLANGAN!) -->
+    <!-- O‘yin: Yozish -->
     <div id="game-write" class="section">
       <h3>O‘yin: Yozish</h3>
       <p id="game-write-letter"></p>
@@ -101,12 +101,10 @@
       'Y': '1-2-3-4-6', 'Z': '1-3-5-6', "G'": '1-2-4-5-6', "CH": '1-2-3-4-5',
       "SH": '1-5-6', "O'": '1-2-3-6', "NG": '1-3-4-5-1-2-4-5'
     };
-    const WRITE_TO_READ = {1:4,2:5,3:6,4:1,5:2,6:3};
+    const WRITE_TO_READ = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
 
-    // Holat
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
 
-    // Sahifani ko‘rsatish
     function show(section) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.getElementById(section).classList.add('active');
@@ -116,7 +114,6 @@
       if (section === 'game-write') startGameWrite();
     }
 
-    // Tarjima
     function translateText() {
       const input = document.getElementById('text-input').value.trim();
       let result = '';
@@ -141,7 +138,6 @@
       }).join('');
     }
 
-    // Nuqta yaratish
     function createBrailleGrid(id, mode = 'read') {
       const grid = document.getElementById(id);
       grid.innerHTML = '';
@@ -194,14 +190,16 @@
       }
     }
 
-    // Yozish o‘rganish
+    // YOZISH O‘RGANISH — KOD KO‘RINADI!
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
       const writeCode = kodlar[letter].split('-').map(n => WRITE_TO_READ[parseInt(n)] || parseInt(n));
+      const writeCodeStr = writeCode.sort((a,b)=>a-b).join('-');
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
-      document.getElementById('write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o‘ngdan)`;
+      document.getElementById('write-letter').innerHTML = 
+        `Harf: <b>${letter}</b> → Yozing (o‘ngdan): <b>${writeCodeStr}</b>`;
       createBrailleGrid('write-grid', 'write');
       document.getElementById('write-result').innerHTML = '';
     }
@@ -245,7 +243,7 @@
       }
     }
 
-    // O‘yin: Yozish (TO‘G‘IRLANGAN!)
+    // O‘yin: Yozish
     function startGameWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -273,7 +271,6 @@
       }
     }
 
-    // Statistikalar
     function saveStats() {
       localStorage.setItem('braille_stats', JSON.stringify(state));
     }
