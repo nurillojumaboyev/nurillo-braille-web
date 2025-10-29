@@ -20,12 +20,13 @@
     .result { margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-family: monospace; }
     .stats { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; }
     .refresh-btn { background: #e74c3c; margin-top: 10px; }
+    .math-info { background: #f0f8ff; padding: 12px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Nurillo Teacherman</h1>
-    <p style="text-align:center;">Braille o‘qish, yozish va o‘yinlar</p>
+    <p style="text-align:center;">Braille o‘qish, yozish va matematik ifoda</p>
 
     <div class="menu">
       <div class="btn" onclick="show('translate')">Tarjima</div>
@@ -49,6 +50,7 @@
       <h3>O‘qishni o‘rganamiz</h3>
       <p id="read-letter"></p>
       <div class="braille-grid" id="read-grid"></div>
+      <div id="read-math" class="math-info"></div>
       <button class="btn" onclick="checkRead()">Tekshirish</button>
       <button class="btn refresh-btn" onclick="startLearnRead()">Yangi harf</button>
       <div id="read-result" class="result"></div>
@@ -59,6 +61,7 @@
       <h3>Yozishni o‘rganamiz</h3>
       <p id="write-letter"></p>
       <div class="braille-grid" id="write-grid"></div>
+      <div id="write-math" class="math-info"></div>
       <button class="btn" onclick="checkWrite()">Tekshirish</button>
       <button class="btn refresh-btn" onclick="startLearnWrite()">Yangi harf</button>
       <div id="write-result" class="result"></div>
@@ -69,6 +72,7 @@
       <h3>O‘yin: O‘qish</h3>
       <p id="game-read-letter"></p>
       <div class="braille-grid" id="game-read-grid"></div>
+      <div id="game-read-math" class="math-info"></div>
       <button class="btn" onclick="checkGameRead()">Javob berish</button>
       <button class="btn refresh-btn" onclick="startGameRead()">Yangi harf</button>
       <div id="game-read-result" class="result"></div>
@@ -79,6 +83,7 @@
       <h3>O‘yin: Yozish</h3>
       <p id="game-write-letter"></p>
       <div class="braille-grid" id="game-write-grid"></div>
+      <div id="game-write-math" class="math-info"></div>
       <button class="btn" onclick="checkGameWrite()">Javob berish</button>
       <button class="btn refresh-btn" onclick="startGameWrite()">Yangi harf</button>
       <div id="game-write-result" class="result"></div>
@@ -92,20 +97,43 @@
   </div>
 
   <script>
-    // Braille kodlari (o‘qish uchun, chapdan)
+    // SIZNING JADVALINGIZ
     const kodlar = {
-      'A': '1', 'B': '1-2', 'C': '1-4', 'D': '1-4-5', 'E': '1-5', 'F': '1-2-4',
-      'G': '1-2-4-5', 'H': '1-2-5', 'I': '2-4', 'J': '2-4-5', 'K': '1-3', 'L': '1-2-3',
-      'M': '1-3-4', 'N': '1-3-4-5', 'O': '1-3-5', 'P': '1-2-3-4', 'Q': '1-2-3-4-5',
-      'R': '1-2-3-5', 'S': '2-3-4', 'T': '2-3-4-5', 'U': '1-3-6', 'V': '1-2-3-6',
-      'W': '2-4-5-6', 'X': '1-3-4-6', 'Y': '1-3-4-5-6', 'Z': '1-3-5-6',
-      "O'": '1-2-3-6', "G'": '1-2-4-5-6', "CH": '1-6', "SH": '1-4-6', "NG": '1-3-4-5-6'
+      'A': '1', 'B': '1-2', 'D': '1-4-5', 'E': '1-5',
+      'F': '1-2-4', 'G': '1-2-4-5', 'H': '1-4-5-6', 'I': '2-4', 'J': '2-4-5',
+      'K': '1-3', 'L': '1-2-3', 'M': '1-3-4', 'N': '1-3-4-5', 'O': '1-3-5',
+      'P': '1-2-3-4', 'Q': '1-3-4-5-6', 'R': '1-2-3-5', 'S': '2-3-4', 'T': '2-3-4-5',
+      'U': '1-2-6', 'V': '2-4-5-6', 'X': '1-2-5',
+      'Y': '1-2-3-4-6', 'Z': '1-3-5-6', "G'": '1-2-4-5-6', "CH": '1-2-3-4-5',
+      "SH": '1-5-6', "O'": '1-2-3-6', "NG": '1-3-4-5-1-2-4-5'
     };
 
-    // Yozish uchun: har bir nuqta o‘z o‘rnida o‘zgaradi
     const MIRROR = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
 
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
+
+    // MATEMATIK FUNKSIYALAR
+    function brailleToDecimal(dots) {
+      return dots.split('-').reduce((sum, n) => sum + Math.pow(2, n-1), 0);
+    }
+
+    function brailleToBinary(dots) {
+      const bits = [0,0,0,0,0,0];
+      dots.split('-').forEach(n => { if (n >=1 && n <=6) bits[n-1] = 1; });
+      return bits.join('');
+    }
+
+    function showMathInfo(letter, dots, elementId) {
+      const dec = brailleToDecimal(dots);
+      const bin = brailleToBinary(dots);
+      const formula = dots.split('-').map(n => `2^${n-1}`).join(' + ');
+      document.getElementById(elementId).innerHTML = `
+        <b>Matematik ifoda:</b><br>
+        ${letter} = ${formula}<br>
+        = <b>${dec}</b> (10-lik)<br>
+        = <b>${bin}</b> (2-lik)
+      `;
+    }
 
     function show(section) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -117,7 +145,7 @@
     }
 
     function translateText() {
-      const input = document.getElementById('text-input').value.trim();
+      const input = document.getElementById('text-input').value.trim().toUpperCase();
       let result = '';
       if (/^[0-9,\-/\s]+$/.test(input)) {
         result = brailleToText(input);
@@ -128,7 +156,7 @@
     }
 
     function textToBraille(text) {
-      return text.toUpperCase().split('').map(c => c === ' ' ? '/' : (kodlar[c] || '?')).join(', ');
+      return text.split('').map(c => kodlar[c] || '?').join(', ');
     }
 
     function brailleToText(braille) {
@@ -143,7 +171,7 @@
     function createBrailleGrid(id, mode = 'read') {
       const grid = document.getElementById(id);
       grid.innerHTML = '';
-      const order = mode === 'write' ? [4,1,5,2,6,3] : [1,4,2,5,3,6];  // o‘ngdan chapga
+      const order = mode === 'write' ? [4,1,5,2,6,3] : [1,4,2,5,3,6];
       order.forEach(num => {
         const dot = document.createElement('div');
         dot.className = 'dot';
@@ -169,13 +197,14 @@
       return letters[Math.floor(Math.random() * letters.length)];
     }
 
-    // O‘qish o‘rganish
+    // O‘qish
     function startLearnRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
       state.expected = kodlar[letter].split('-').map(Number).sort((a,b)=>a-b);
       state.selected = [];
       document.getElementById('read-letter').innerHTML = `Harf: <b>${letter}</b> → Kod: <b>${kodlar[letter]}</b>`;
+      showMathInfo(letter, kodlar[letter], 'read-math');
       createBrailleGrid('read-grid', 'read');
       document.getElementById('read-result').innerHTML = '';
     }
@@ -192,7 +221,7 @@
       }
     }
 
-    // YOZISH O‘RGANISH — TO‘G‘RI!
+    // Yozish
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -203,6 +232,7 @@
       state.selected = [];
       document.getElementById('write-letter').innerHTML = 
         `Harf: <b>${letter}</b> → Yozing (o‘ngdan): <b>${writeCodeStr}</b>`;
+      showMathInfo(letter, writeCodeStr, 'write-math');
       createBrailleGrid('write-grid', 'write');
       document.getElementById('write-result').innerHTML = '';
     }
@@ -226,6 +256,7 @@
       state.expected = kodlar[letter].split('-').map(Number).sort((a,b)=>a-b);
       state.selected = [];
       document.getElementById('game-read-letter').innerHTML = `Harf: <b>${letter}</b>`;
+      showMathInfo(letter, kodlar[letter], 'game-read-math');
       createBrailleGrid('game-read-grid', 'read');
       document.getElementById('game-read-result').innerHTML = '';
     }
@@ -255,6 +286,7 @@
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
       document.getElementById('game-write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o‘ngdan)`;
+      showMathInfo(letter, writeCode.sort((a,b)=>a-b).join('-'), 'game-write-math');
       createBrailleGrid('game-write-grid', 'write');
       document.getElementById('game-write-result').innerHTML = '';
     }
