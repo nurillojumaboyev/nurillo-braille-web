@@ -3,221 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nurillo Teacherman - Braille 3D</title>
+  <title>Nurillo Teacherman - Braille</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap');
-    body { 
-      font-family: 'Poppins', sans-serif; 
-      margin: 0; 
-      padding: 20px; 
-      background: linear-gradient(135deg, #1e3c72, #2a5298); 
-      min-height: 100vh;
-      perspective: 1000px;
-    }
-    .container { 
-      max-width: 900px; 
-      margin: 20px auto; 
-      background: rgba(255,255,255,0.95); 
-      border-radius: 24px; 
-      padding: 30px; 
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      transform-style: preserve-3d;
-      transition: transform 0.5s;
-    }
-    .container:hover { transform: translateY(-10px) rotateX(2deg); }
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.95); border-radius: 24px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform-style: preserve-3d; }
+    h1 { text-align: center; color: #2c3e50; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .subtitle { text-align: center; color: #7f8c8d; font-size: 1.1rem; margin-bottom: 20px; }
 
-    h1 { 
-      text-align: center; 
-      color: #1e3c72; 
-      margin: 0 0 8px; 
-      font-size: 2.5rem;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .subtitle { text-align: center; color: #555; font-size: 1.1rem; margin-bottom: 30px; }
+    .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+    .menu-item { position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.15); transition: all 0.3s; cursor: pointer; }
+    .menu-item:hover { transform: translateY(-10px) rotateX(5deg); box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+    .menu-btn { padding: 20px; font-size: 16px; font-weight: bold; text-align: center; color: white; }
+    .menu-desc { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-size: 12px; opacity: 0; transition: opacity 0.3s; }
+    .menu-item:hover .menu-desc { opacity: 1; }
 
-    /* 3D MENYU */
-    .menu { 
-      display: grid; 
-      grid-template-columns: repeat(2, 1fr); 
-      gap: 20px; 
-      margin: 30px 0;
-    }
-    .menu-item { 
-      position: relative; 
-      cursor: pointer; 
-      border-radius: 20px; 
-      overflow: hidden; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transform-style: preserve-3d;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .menu-item:hover { 
-      transform: translateY(-15px) rotateX(10deg) rotateY(5deg); 
-      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-    }
-    .menu-btn { 
-      padding: 25px; 
-      color: white; 
-      font-weight: 700; 
-      text-align: center; 
-      font-size: 1.3rem;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      transition: all 0.3s;
-    }
-    .menu-desc { 
-      position: absolute; 
-      bottom: 0; 
-      left: 0; 
-      right: 0; 
-      background: rgba(0,0,0,0.8); 
-      padding: 12px; 
-      font-size: 0.9rem; 
-      opacity: 0; 
-      transform: translateY(20px);
-      transition: all 0.4s;
-    }
-    .menu-item:hover .menu-desc { 
-      opacity: 1; 
-      transform: translateY(0);
-    }
+    .btn-translate { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .btn-learn-read { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+    .btn-learn-write { background: linear-gradient(135deg, #e67e22, #f39c12); }
+    .btn-game-read { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .btn-game-write { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .btn-stats { background: linear-gradient(135deg, #34495e, #2c3e50); }
 
-    /* 3D RANG PALITRASI */
-    .btn-translate { background: linear-gradient(145deg, #4facfe, #00f2fe); }
-    .btn-read { background: linear-gradient(145deg, #43e97b, #38f9d7); }
-    .btn-write { background: linear-gradient(145deg, #fa709a, #fee140); }
-    .btn-game-read { background: linear-gradient(145deg, #a8edea, #fed6e3); }
-    .btn-game-write { background: linear-gradient(145deg, #ff9a9e, #fad0c4); }
-    .btn-stats { background: linear-gradient(145deg, #667eea, #764ba2); }
-
-    .section { display: none; margin-top: 30px; }
-    .active { display: block; animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    textarea { 
-      width: 100%; 
-      padding: 16px; 
-      margin: 15px 0; 
-      border: 2px solid #ddd; 
-      border-radius: 16px; 
-      font-size: 1.1rem;
-      box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
-      transition: all 0.3s;
-    }
-    textarea:focus { border-color: #4facfe; box-shadow: 0 0 0 4px rgba(79,172,254,0.2); }
-
-    /* 3D BRAILLE NUQTALARI */
-    .braille-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 15px; 
-      max-width: 220px; 
-      margin: 30px auto;
-      transform-style: preserve-3d;
-    }
-    .dot { 
-      width: 70px; 
-      height: 70px; 
-      background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
-      border-radius: 50%; 
-      cursor: pointer; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-weight: bold; 
-      color: #555;
-      font-size: 1.3rem;
-      box-shadow: 
-        0 8px 16px rgba(0,0,0,0.2),
-        inset 0 4px 8px rgba(255,255,255,0.6),
-        inset 0 -4px 8px rgba(0,0,0,0.1);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      transform: translateZ(0);
-    }
-    .dot:hover { 
-      transform: translateY(-8px) scale(1.05); 
-      box-shadow: 
-        0 20px 30px rgba(0,0,0,0.3),
-        inset 0 6px 12px rgba(255,255,255,0.7);
-    }
-    .dot.active { 
-      background: linear-gradient(145deg, #2c3e50, #1a252f);
-      color: white;
-      transform: translateY(-12px) scale(1.1);
-      box-shadow: 
-        0 25px 40px rgba(0,0,0,0.4),
-        inset 0 6px 12px rgba(255,255,255,0.3);
-    }
-
-    .result { 
-      margin-top: 20px; 
-      padding: 20px; 
-      background: linear-gradient(145deg, #e8f5e9, #d5f5d8);
-      border-radius: 16px; 
-      font-family: 'Courier New', monospace;
-      font-size: 1.1rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      transform-style: preserve-3d;
-    }
-
-    .btn, .refresh-btn {
-      padding: 14px 24px;
-      border: none;
-      border-radius: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      margin: 10px 5px 0 0;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      transition: all 0.3s;
-      transform-style: preserve-3d;
-    }
-    .btn:hover, .refresh-btn:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    }
-    .refresh-btn {
-      background: linear-gradient(145deg, #e74c3c, #c0392b);
-      color: white;
-    }
-
-    .stats { 
-      background: linear-gradient(145deg, #fffacd, #f7dc6f); 
-      padding: 20px; 
-      border-radius: 16px; 
-      margin: 20px 0;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      font-size: 1.1rem;
-    }
+    .section { display: none; margin-top: 20px; }
+    .active { display: block; }
+    textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    .braille-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 200px; margin: 20px auto; }
+    .dot { width: 50px; height: 50px; background: #eee; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .dot:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+    .dot.active { background: #2c3e50; color: white; transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+    .result { margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-family: monospace; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .stats { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .refresh-btn { background: #e74c3c; margin-top: 10px; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Nurillo Teacherman</h1>
-    <p class="subtitle">3D Braille O‘quv Dasturi</p>
+    <p class="subtitle">Braille o'qish, yozish va o'yinlar</p>
 
     <div class="menu">
       <div class="menu-item btn-translate" onclick="show('translate')">
         <div class="menu-btn">Tarjima</div>
-        <div class="menu-desc">Matnni Braille yoki aksincha o‘tkazish</div>
+        <div class="menu-desc">Matnni Braille kodiga yoki aksincha tarjima qilish</div>
       </div>
-      <div class="menu-item btn-read" onclick="show('learn-read')">
-        <div class="menu-btn">O‘qish</div>
-        <div class="menu-desc">Nuqtalar orqali harfni topish</div>
+      <div class="menu-item btn-learn-read" onclick="show('learn-read')">
+        <div class="menu-btn">O'qish</div>
+        <div class="menu-desc">Nuqtalar orqali harfni o'qishni o'rganish</div>
       </div>
-      <div class="menu-item btn-write" onclick="show('learn-write')">
+      <div class="menu-item btn-learn-write" onclick="show('learn-write')">
         <div class="menu-btn">Yozish</div>
-        <div class="menu-desc">Harfni eshitib, nuqta bosish</div>
+        <div class="menu-desc">Harfni eshitib, nuqtalar bosishni o'rganish</div>
       </div>
       <div class="menu-item btn-game-read" onclick="show('game-read')">
-        <div class="menu-btn">O‘yin: O‘qish</div>
-        <div class="menu-desc">Tezlikda o‘qish, ball to‘plash</div>
+        <div class="menu-btn">O'yin: O'qish</div>
+        <div class="menu-desc">Tezlikda o'qish va ball to'plash</div>
       </div>
       <div class="menu-item btn-game-write" onclick="show('game-write')">
-        <div class="menu-btn">O‘yin: Yozish</div>
-        <div class="menu-desc">Tez yozish, xato qilmaslik</div>
+        <div class="menu-btn">O'yin: Yozish</div>
+        <div class="menu-desc">Tezlikda yozish va xato qilmaslik</div>
       </div>
       <div class="menu-item btn-stats" onclick="showStats()">
         <div class="menu-btn">Statistikalar</div>
-        <div class="menu-desc">Ballar, o‘sish, natijalar</div>
+        <div class="menu-desc">Sizning ballar va natijalaringiz</div>
       </div>
     </div>
 
@@ -225,73 +73,67 @@
     <div id="translate" class="section active">
       <h3>Matn ↔ Braille</h3>
       <textarea id="text-input" placeholder="SALOM yozing yoki 1-2-3, 1-5"></textarea>
-      <button class="btn" style="background:linear-gradient(145deg,#4facfe,#00f2fe);color:white;" onclick="translateText()">Tarjima qilish</button>
+      <button class="btn btn-translate" onclick="translateText()">Tarjima qilish</button>
       <div id="translate-result" class="result"></div>
     </div>
 
-    <!-- O‘qish -->
+    <!-- O'qish -->
     <div id="learn-read" class="section">
-      <h3>O‘qishni o‘rganamiz</h3>
-      <p id="read-letter" style="font-size:1.8rem; font-weight:bold; text-align:center;"></p>
+      <h3>O'qishni o'rganamiz</h3>
+      <p id="read-letter"></p>
       <div class="braille-grid" id="read-grid"></div>
-      <div style="text-align:center;">
-        <button class="btn" style="background:linear-gradient(145deg,#43e97b,#38f9d7);color:white;" onclick="checkRead()">Tekshirish</button>
-        <button class="refresh-btn" onclick="startLearnRead()">Yangi harf</button>
-      </div>
+      <button class="btn btn-learn-read" onclick="checkRead()">Tekshirish</button>
+      <button class="refresh-btn" onclick="startLearnRead()">Yangi harf</button>
       <div id="read-result" class="result"></div>
     </div>
 
     <!-- Yozish -->
     <div id="learn-write" class="section">
-      <h3>Yozishni o‘rganamiz</h3>
-      <p id="write-letter" style="font-size:1.8rem; font-weight:bold; text-align:center;"></p>
+      <h3>Yozishni o'rganamiz</h3>
+      <p id="write-letter"></p>
       <div class="braille-grid" id="write-grid"></div>
-      <div style="text-align:center;">
-        <button class="btn" style="background:linear-gradient(145deg,#fa709a,#fee140);color:white;" onclick="checkWrite()">Tekshirish</button>
-        <button class="refresh-btn" onclick="startLearnWrite()">Yangi harf</button>
-      </div>
+      <button class="btn btn-learn-write" onclick="checkWrite()">Tekshirish</button>
+      <button class="refresh-btn" onclick="startLearnWrite()">Yangi harf</button>
       <div id="write-result" class="result"></div>
     </div>
 
-    <!-- O‘yin: O‘qish -->
+    <!-- O'yin: O'qish -->
     <div id="game-read" class="section">
-      <h3>O‘yin: O‘qish</h3>
-      <p id="game-read-letter" style="font-size:2.5rem; font-weight:bold; text-align:center; color:#a8edea;"></p>
+      <h3>O'yin: O'qish</h3>
+      <p id="game-read-letter"></p>
       <div class="braille-grid" id="game-read-grid"></div>
-      <div style="text-align:center;">
-        <button class="btn" style="background:linear-gradient(145deg,#a8edea,#fed6e3);color:#333;" onclick="checkGameRead()">Javob berish</button>
-        <button class="refresh-btn" onclick="startGameRead()">Yangi</button>
-      </div>
+      <button class="btn btn-game-read" onclick="checkGameRead()">Javob berish</button>
+      <button class="refresh-btn" onclick="startGameRead()">Yangi harf</button>
       <div id="game-read-result" class="result"></div>
     </div>
 
-    <!-- O‘yin: Yozish -->
+    <!-- O'yin: Yozish -->
     <div id="game-write" class="section">
-      <h3>O‘yin: Yozish</h3>
-      <p id="game-write-letter" style="font-size:2.5rem; font-weight:bold; text-align:center; color:#ff9a9e;"></p>
+      <h3>O'yin: Yozish</h3>
+      <p id="game-write-letter"></p>
       <div class="braille-grid" id="game-write-grid"></div>
-      <div style="text-align:center;">
-        <button class="btn" style="background:linear-gradient(145deg,#ff9a9e,#fad0c4);color:#333;" onclick="checkGameWrite()">Javob berish</button>
-        <button class="refresh-btn" onclick="startGameWrite()">Yangi</button>
-      </div>
+      <button class="btn btn-game-write" onclick="checkGameWrite()">Javob berish</button>
+      <button class="refresh-btn" onclick="startGameWrite()">Yangi harf</button>
       <div id="game-write-result" class="result"></div>
     </div>
 
     <!-- Statistikalar -->
     <div id="stats" class="section">
       <h3>Statistikalar</h3>
-      <div class="stats" id="stats-content"></div>
+      <div class="stats" id="stats-content">Yuklanmoqda...</div>
     </div>
   </div>
 
   <script>
+    // TO'RI BRAILLE JADVALI (sizning jadvalingiz)
     const kodlar = {
-      'A': '1', 'B': '1-2', 'C': '1-4', 'D': '1-4-5', 'E': '1-5',
-      'F': '1-2-4', 'G': '1-2-4-5', 'H': '1-2-5', 'I': '2-4', 'J': '2-4-5',
+      'A': '1', 'B': '1-2', 'D': '1-4-5', 'E': '1-5',
+      'F': '1-2-4', 'G': '1-2-4-5', 'H': '1-4-5-6', 'I': '2-4', 'J': '2-4-5',
       'K': '1-3', 'L': '1-2-3', 'M': '1-3-4', 'N': '1-3-4-5', 'O': '1-3-5',
-      'P': '1-2-3-4', 'Q': '1-2-3-4-5', 'R': '1-2-3-5', 'S': '2-3-4', 'T': '2-3-4-5',
-      'U': '1-3-6', 'V': '1-2-3-6', 'W': '2-4-5-6', 'X': '1-3-4-6', 'Y': '1-3-4-5-6', 'Z': '1-3-5-6',
-      ' ': '/', "O'": '1-2-3-6', "G'": '1-2-4-5-6', "SH": '1-4-6', "CH": '1-6'
+      'P': '1-2-3-4', 'Q': '1-3-4-5-6', 'R': '1-2-3-3', 'S': '2-3-4', 'T': '2-3-4-5',
+      'U': '1-2-6', 'V': '2-4-5-6', 'X': '1-2-5',
+      'Y': '1-2-3-4-6', 'Z': '1-3-5-6', "G'": '1-2-4-5-6', "CH": '1-2-3-4-5',
+      "SH": '1-5-6', "O'": '1-2-3-6', "NG": '1-3-4-5-1-2-4-5'
     };
 
     const MIRROR = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
@@ -317,7 +159,10 @@
       document.getElementById('translate-result').innerHTML = `<b>Natija:</b> ${result}`;
     }
 
-    function textToBraille(text) { return text.split('').map(c => kodlar[c] || '?').join(', '); }
+    function textToBraille(text) {
+      return text.split('').map(c => kodlar[c] || '?').join(', ');
+    }
+
     function brailleToText(braille) {
       const parts = braille.split(/[\s,]+/).filter(Boolean);
       return parts.map(p => {
@@ -352,17 +197,17 @@
     }
 
     function randomLetter() {
-      const letters = Object.keys(kodlar).filter(k => k !== ' ');
+      const letters = Object.keys(kodlar);
       return letters[Math.floor(Math.random() * letters.length)];
     }
 
-    // O‘QISH
+    // O'qish
     function startLearnRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
       state.expected = kodlar[letter].split('-').map(Number).sort((a,b)=>a-b);
       state.selected = [];
-      document.getElementById('read-letter').innerHTML = `Harf: <b>${letter}</b> → <b>${kodlar[letter]}</b>`;
+      document.getElementById('read-letter').innerHTML = `Harf: <b>${letter}</b> → Kod: <b>${kodlar[letter]}</b>`;
       createBrailleGrid('read-grid', 'read');
       document.getElementById('read-result').innerHTML = '';
     }
@@ -371,11 +216,15 @@
       const selected = [...state.selected].sort((a,b)=>a-b);
       const correct = JSON.stringify(selected) === JSON.stringify(state.expected);
       const res = document.getElementById('read-result');
-      if (correct) { res.innerHTML = 'To‘g‘ri!'; setTimeout(startLearnRead, 1500); }
-      else { res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`; }
+      if (correct) {
+        res.innerHTML = 'To'g'ri!';
+        setTimeout(startLearnRead, 1500);
+      } else {
+        res.innerHTML = `Xato. To'g'ri: ${state.expected.join('-')}`;
+      }
     }
 
-    // YOZISH
+    // Yozish
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -384,7 +233,7 @@
       const writeCodeStr = writeCode.sort((a,b)=>a-b).join('-');
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
-      document.getElementById('write-letter').innerHTML = `Harf: <b>${letter}</b> → <b>${writeCodeStr}</b>`;
+      document.getElementById('write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o'ngdan): <b>${writeCodeStr}</b>`;
       createBrailleGrid('write-grid', 'write');
       document.getElementById('write-result').innerHTML = '';
     }
@@ -393,11 +242,15 @@
       const selected = [...state.selected].sort((a,b)=>a-b);
       const correct = JSON.stringify(selected) === JSON.stringify(state.expected);
       const res = document.getElementById('write-result');
-      if (correct) { res.innerHTML = 'To‘g‘ri!'; setTimeout(startLearnWrite, 1500); }
-      else { res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`; }
+      if (correct) {
+        res.innerHTML = 'To'g'ri!';
+        setTimeout(startLearnWrite, 1500);
+      } else {
+        res.innerHTML = `Xato. To'g'ri: ${state.expected.join('-')}`;
+      }
     }
 
-    // O‘YIN: O‘QISH
+    // O'yin: O'qish (javob ko'rinmaydi)
     function startGameRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -412,17 +265,19 @@
       const selected = [...state.selected].sort((a,b)=>a-b);
       const res = document.getElementById('game-read-result');
       if (JSON.stringify(selected) === JSON.stringify(state.expected)) {
-        state.score += 10; state.correct += 1;
-        res.innerHTML = `To‘g‘ri! (+10 ball) Jami: ${state.score}`;
-        saveStats(); setTimeout(startGameRead, 1500);
+        state.score += 10;
+        state.correct += 1;
+        res.innerHTML = `To'g'ri! (+10 ball) Jami: ${state.score}`;
+        saveStats();
+        setTimeout(startGameRead, 1500);
       } else {
         state.wrong += 1;
-        res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`;
+        res.innerHTML = `Xato. To'g'ri: ${state.expected.join('-')}`;
         saveStats();
       }
     }
 
-    // O‘YIN: YOZISH
+    // O'yin: Yozish (javob ko'rinmaydi)
     function startGameWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -439,22 +294,27 @@
       const selected = [...state.selected].sort((a,b)=>a-b);
       const res = document.getElementById('game-write-result');
       if (JSON.stringify(selected) === JSON.stringify(state.expected)) {
-        state.score += 10; state.correct += 1;
-        res.innerHTML = `To‘g‘ri! (+10 ball) Jami: ${state.score}`;
-        saveStats(); setTimeout(startGameWrite, 1500);
+        state.score += 10;
+        state.correct += 1;
+        res.innerHTML = `To'g'ri! (+10 ball) Jami: ${state.score}`;
+        saveStats();
+        setTimeout(startGameWrite, 1500);
       } else {
         state.wrong += 1;
-        res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`;
+        res.innerHTML = `Xato. To'g'ri: ${state.expected.join('-')}`;
         saveStats();
       }
     }
 
-    function saveStats() { localStorage.setItem('braille_stats', JSON.stringify(state)); }
+    function saveStats() {
+      localStorage.setItem('braille_stats', JSON.stringify(state));
+    }
+
     function showStats() {
       const saved = JSON.parse(localStorage.getItem('braille_stats') || '{}');
       document.getElementById('stats-content').innerHTML = `
         Ballar: <b>${saved.score || 0}</b><br>
-        To‘g‘ri javoblar: <b>${saved.correct || 0}</b><br>
+        To'g'ri javoblar: <b>${saved.correct || 0}</b><br>
         Xato javoblar: <b>${saved.wrong || 0}</b>
       `;
       show('stats');
