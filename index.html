@@ -39,7 +39,7 @@
     <!-- Tarjima -->
     <div id="translate" class="section active">
       <h3>Matn ↔ Braille</h3>
-      <textarea id="text-input" placeholder="SALOM yozing yoki 1-2-4, 1-5"></textarea>
+      <textarea id="text-input" placeholder="SALOM yozing yoki 1-2-3, 1-5"></textarea>
       <button class="btn" onclick="translateText()">Tarjima qilish</button>
       <div id="translate-result" class="result"></div>
     </div>
@@ -54,7 +54,7 @@
       <div id="read-result" class="result"></div>
     </div>
 
-    <!-- Yozish o‘rganish (KOD KO‘RINADI!) -->
+    <!-- Yozish o‘rganish -->
     <div id="learn-write" class="section">
       <h3>Yozishni o‘rganamiz</h3>
       <p id="write-letter"></p>
@@ -92,16 +92,18 @@
   </div>
 
   <script>
-    // Braille kodlari
+    // Braille kodlari (o‘qish uchun, chapdan)
     const kodlar = {
-      'A': '1', 'B': '1-2', 'D': '1-4-5', 'E': '1-5', 'F': '1-2-4', 'G': '1-2-4-5',
-      'H': '1-3-4-6', 'I': '2-4', 'J': '2-4-5', 'K': '1-3', 'L': '1-2-3', 'M': '1-3-4',
-      'N': '1-3-4-5', 'O': '1-3-5', 'P': '1-2-3-4', 'Q': '1-3-4-5-6', 'R': '1-2-3-5',
-      'S': '2-3-4', 'T': '2-3-4-5', 'U': '1-2-6', 'V': '2-4-5-6', 'X': '1-2-5',
-      'Y': '1-2-3-4-6', 'Z': '1-3-5-6', "G'": '1-2-4-5-6', "CH": '1-2-3-4-5',
-      "SH": '1-5-6', "O'": '1-2-3-6', "NG": '1-3-4-5-1-2-4-5'
+      'A': '1', 'B': '1-2', 'C': '1-4', 'D': '1-4-5', 'E': '1-5', 'F': '1-2-4',
+      'G': '1-2-4-5', 'H': '1-2-5', 'I': '2-4', 'J': '2-4-5', 'K': '1-3', 'L': '1-2-3',
+      'M': '1-3-4', 'N': '1-3-4-5', 'O': '1-3-5', 'P': '1-2-3-4', 'Q': '1-2-3-4-5',
+      'R': '1-2-3-5', 'S': '2-3-4', 'T': '2-3-4-5', 'U': '1-3-6', 'V': '1-2-3-6',
+      'W': '2-4-5-6', 'X': '1-3-4-6', 'Y': '1-3-4-5-6', 'Z': '1-3-5-6',
+      "O'": '1-2-3-6', "G'": '1-2-4-5-6', "CH": '1-6', "SH": '1-4-6', "NG": '1-3-4-5-6'
     };
-    const WRITE_TO_READ = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
+
+    // Yozish uchun: har bir nuqta o‘z o‘rnida o‘zgaradi
+    const MIRROR = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
 
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
 
@@ -133,7 +135,7 @@
       const parts = braille.split(/[\s,]+/).filter(Boolean);
       return parts.map(p => {
         if (p === '/') return ' ';
-        const mapped = p.split('-').map(n => WRITE_TO_READ[parseInt(n)] || parseInt(n)).join('-');
+        const mapped = p.split('-').map(n => MIRROR[parseInt(n)] || parseInt(n)).join('-');
         return Object.entries(kodlar).find(([k,v]) => v === mapped)?.[0] || '?';
       }).join('');
     }
@@ -141,7 +143,7 @@
     function createBrailleGrid(id, mode = 'read') {
       const grid = document.getElementById(id);
       grid.innerHTML = '';
-      const order = mode === 'write' ? [4,1,5,2,6,3] : [1,4,2,5,3,6];
+      const order = mode === 'write' ? [4,1,5,2,6,3] : [1,4,2,5,3,6];  // o‘ngdan chapga
       order.forEach(num => {
         const dot = document.createElement('div');
         dot.className = 'dot';
@@ -190,11 +192,12 @@
       }
     }
 
-    // YOZISH O‘RGANISH — KOD KO‘RINADI!
+    // YOZISH O‘RGANISH — TO‘G‘RI!
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
-      const writeCode = kodlar[letter].split('-').map(n => WRITE_TO_READ[parseInt(n)] || parseInt(n));
+      const readCode = kodlar[letter].split('-').map(Number);
+      const writeCode = readCode.map(n => MIRROR[n]);
       const writeCodeStr = writeCode.sort((a,b)=>a-b).join('-');
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
@@ -247,7 +250,8 @@
     function startGameWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
-      const writeCode = kodlar[letter].split('-').map(n => WRITE_TO_READ[parseInt(n)] || parseInt(n));
+      const readCode = kodlar[letter].split('-').map(Number);
+      const writeCode = readCode.map(n => MIRROR[n]);
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
       document.getElementById('game-write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o‘ngdan)`;
@@ -285,7 +289,6 @@
       show('stats');
     }
 
-    // Boshlash
     show('translate');
   </script>
 </body>
