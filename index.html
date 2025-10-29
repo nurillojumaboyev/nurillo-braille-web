@@ -13,13 +13,11 @@
     .btn:hover { background: #2980b9; transform: translateY(-2px); }
     .section { display: none; margin-top: 20px; }
     .active { display: block; }
-    input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
     .braille-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 200px; margin: 20px auto; }
     .dot { width: 50px; height: 50px; background: #eee; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; }
     .dot.active { background: #2c3e50; color: white; }
     .result { margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-family: monospace; }
-    .lesson { line-height: 1.8; }
-    .test-btn { background: #27ae60; margin: 5px; padding: 10px; color: white; border: none; border-radius: 8px; cursor: pointer; display: inline-block; }
     .stats { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; }
     .refresh-btn { background: #e74c3c; margin-top: 10px; }
   </style>
@@ -27,7 +25,7 @@
 <body>
   <div class="container">
     <h1>Nurillo Teacherman</h1>
-    <p style="text-align:center;">Braille o‘qish, yozish va darslar</p>
+    <p style="text-align:center;">Braille o‘qish, yozish va o‘yinlar</p>
 
     <div class="menu">
       <div class="btn" onclick="show('translate')">Tarjima</div>
@@ -35,15 +33,13 @@
       <div class="btn" onclick="show('learn-write')">Yozish</div>
       <div class="btn" onclick="show('game-read')">O‘yin: O‘qish</div>
       <div class="btn" onclick="show('game-write')">O‘yin: Yozish</div>
-      <div class="btn" onclick="show('tiflopedagogika')">Tiflopedagogika</div>
-      <div class="btn" onclick="show('tiflografiya')">Tiflografiya</div>
       <div class="btn" onclick="showStats()">Statistikalar</div>
     </div>
 
     <!-- Tarjima -->
     <div id="translate" class="section active">
-      <h3>Matn to Braille</h3>
-      <textarea id="text-input" placeholder="Matn kiriting (masalan: SALOM) yoki Braille kod (1-2-4, 1-5)"></textarea>
+      <h3>Matn ↔ Braille</h3>
+      <textarea id="text-input" placeholder="SALOM yozing yoki 1-2-4, 1-5"></textarea>
       <button class="btn" onclick="translateText()">Tarjima qilish</button>
       <div id="translate-result" class="result"></div>
     </div>
@@ -78,22 +74,20 @@
       <div id="game-read-result" class="result"></div>
     </div>
 
-    <!-- Tiflopedagogika -->
-    <div id="tiflopedagogika" class="section">
-      <h3>Tiflopedagogika darslari</h3>
-      <div id="ped-lessons"></div>
-    </div>
-
-    <!-- Tiflografiya -->
-    <div id="tiflografiya" class="section">
-      <h3>Tiflografiya darslari</h3>
-      <div id="graf-lessons"></div>
+    <!-- O‘yin: Yozish (TO‘G‘IRLANGAN!) -->
+    <div id="game-write" class="section">
+      <h3>O‘yin: Yozish</h3>
+      <p id="game-write-letter"></p>
+      <div class="braille-grid" id="game-write-grid"></div>
+      <button class="btn" onclick="checkGameWrite()">Javob berish</button>
+      <button class="btn refresh-btn" onclick="startGameWrite()">Yangi harf</button>
+      <div id="game-write-result" class="result"></div>
     </div>
 
     <!-- Statistikalar -->
     <div id="stats" class="section">
       <h3>Statistikalar</h3>
-      <div class="stats" id="stats-content"></div>
+      <div class="stats" id="stats-content">Yuklanmoqda...</div>
     </div>
   </div>
 
@@ -112,45 +106,17 @@
     // Holat
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
 
-    // Darslar + Testlar
-    const tiflopedagogika_lessons = {
-      1: { title: "1-dars: Maxsus pedagogika haqida", text: "Maxsus pedagogika — nogironligi bo‘lgan bolalar va kattalar ta’lim-tarbiyasi bilan shug‘ullanadigan fan...", 
-        tests: [["Kimlar bilan ishlaydi?", ["Bolalar", "Nogironlar"], "Nogironlar"], ["Qaysi fan?", ["Tiflopedagogika", "Fizika"], "Tiflopedagogika"]] },
-      2: { title: "2-dars: Tiflopedagogika usullari", text: "Braille, audio, taktil...", 
-        tests: [["Asosiy usul?", ["Braille", "Rasm"], "Braille"]] },
-      3: { title: "3-dars: Moslashtirish", text: "Individual reja, Braille printer...", 
-        tests: [["Nima kerak?", ["Reja", "Dam"], "Reja"]] },
-      4: { title: "4-dars: Ijtimoiy integratsiya", text: "Guruhli mashqlar...", 
-        tests: [["Nima muhim?", ["Guruh", "Yolg‘iz"], "Guruh"]] },
-      5: { title: "5-dars: Texnologiyalar", text: "Braille displey, Seeing AI...", 
-        tests: [["Texnologiya?", ["Braille displey", "Telefon"], "Braille displey"]] }
-    };
-
-    const tiflografiya_lessons = {
-      1: { title: "1-dars: Lui Brail", text: "Louis Braille 1809–1852...", 
-        tests: [["Qachon yashagan?", ["XIX asr", "XX asr"], "XIX asr"]] },
-      2: { title: "2-dars: Brail tizimi", text: "6 nuqta, 64 kombinatsiya...", 
-        tests: [["Necha nuqta?", ["6", "8"], "6"]] },
-      3: { title: "3-dars: Harflar", text: "A=1, B=1-2...", 
-        tests: [["A harfi?", ["1", "1-2"], "1"]] },
-      4: { title: "4-dars: Belgilar", text: "Bo‘sh joy=/, kapital=6...", 
-        tests: [["Bo‘sh joy?", ["/", "1"], "/"]] },
-      5: { title: "5-dars: Amaliyot", text: "Kitoblar, lift tugmalari...", 
-        tests: [["Qayerda ishlatiladi?", ["Kitoblar", "O‘yin"], "Kitoblar"]] }
-    };
-
-    let currentTest = null;
-
+    // Sahifani ko‘rsatish
     function show(section) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.getElementById(section).classList.add('active');
       if (section === 'learn-read') startLearnRead();
       if (section === 'learn-write') startLearnWrite();
       if (section === 'game-read') startGameRead();
-      if (section === 'tiflopedagogika') showLessons('ped', tiflopedagogika_lessons);
-      if (section === 'tiflografiya') showLessons('graf', tiflografiya_lessons);
+      if (section === 'game-write') startGameWrite();
     }
 
+    // Tarjima
     function translateText() {
       const input = document.getElementById('text-input').value.trim();
       let result = '';
@@ -175,6 +141,7 @@
       }).join('');
     }
 
+    // Nuqta yaratish
     function createBrailleGrid(id, mode = 'read') {
       const grid = document.getElementById(id);
       grid.innerHTML = '';
@@ -204,6 +171,7 @@
       return letters[Math.floor(Math.random() * letters.length)];
     }
 
+    // O‘qish o‘rganish
     function startLearnRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -226,6 +194,7 @@
       }
     }
 
+    // Yozish o‘rganish
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -249,6 +218,7 @@
       }
     }
 
+    // O‘yin: O‘qish
     function startGameRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
@@ -275,6 +245,35 @@
       }
     }
 
+    // O‘yin: Yozish (TO‘G‘IRLANGAN!)
+    function startGameWrite() {
+      const letter = randomLetter();
+      state.currentLetter = letter;
+      const writeCode = kodlar[letter].split('-').map(n => WRITE_TO_READ[parseInt(n)] || parseInt(n));
+      state.expected = writeCode.sort((a,b)=>a-b);
+      state.selected = [];
+      document.getElementById('game-write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o‘ngdan)`;
+      createBrailleGrid('game-write-grid', 'write');
+      document.getElementById('game-write-result').innerHTML = '';
+    }
+
+    function checkGameWrite() {
+      const selected = [...state.selected].sort((a,b)=>a-b);
+      const res = document.getElementById('game-write-result');
+      if (JSON.stringify(selected) === JSON.stringify(state.expected)) {
+        state.score += 10;
+        state.correct += 1;
+        res.innerHTML = `To‘g‘ri! (+10 ball) Jami: ${state.score}`;
+        saveStats();
+        setTimeout(startGameWrite, 1500);
+      } else {
+        state.wrong += 1;
+        res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`;
+        saveStats();
+      }
+    }
+
+    // Statistikalar
     function saveStats() {
       localStorage.setItem('braille_stats', JSON.stringify(state));
     }
@@ -283,62 +282,10 @@
       const saved = JSON.parse(localStorage.getItem('braille_stats') || '{}');
       document.getElementById('stats-content').innerHTML = `
         Ballar: <b>${saved.score || 0}</b><br>
-        To‘g‘ri: <b>${saved.correct || 0}</b><br>
-        Xato: <b>${saved.wrong || 0}</b>
+        To‘g‘ri javoblar: <b>${saved.correct || 0}</b><br>
+        Xato javoblar: <b>${saved.wrong || 0}</b>
       `;
       show('stats');
-    }
-
-    function showLessons(prefix, lessons) {
-      const container = document.getElementById(prefix + '-lessons');
-      container.innerHTML = Object.entries(lessons).map(([i, l]) => `
-        <div style="margin:15px 0; padding:15px; border:1px solid #eee; border-radius:8px;">
-          <b>${l.title}</b><br><br>
-          <div class="lesson">${l.text.replace(/\n/g, '<br>')}</div>
-          ${l.tests ? `
-            <button class="test-btn" onclick="startTest(${i}, '${prefix}')">Testni boshlash</button>
-            <div id="test-${prefix}-${i}" style="margin-top:10px;"></div>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function startTest(lessonId, prefix) {
-      const lessons = prefix === 'ped' ? tiflopedagogika_lessons : tiflografiya_lessons;
-      currentTest = { lessonId, prefix, q: 0, correct: 0 };
-      showTestQuestion();
-    }
-
-    function showTestQuestion() {
-      if (!currentTest) return;
-      const { lessonId, prefix, q } = currentTest;
-      const lessons = prefix === 'ped' ? tiflopedagogika_lessons : tiflografiya_lessons;
-      const test = lessons[lessonId].tests[q];
-      if (!test) {
-        document.getElementById(`test-${prefix}-${lessonId}`).innerHTML = 
-          `<b style="color:green;">Test tugadi! To‘g‘ri: ${currentTest.correct}/${lessons[lessonId].tests.length}</b>`;
-        currentTest = null;
-        return;
-      }
-      const [question, options, correct] = test;
-      const html = `
-        <p><b>${question}</b></p>
-        ${options.map(opt => `
-          <button class="test-btn" onclick="checkTestAnswer('${opt}', '${correct}', ${q})">${opt}</button>
-        `).join('')}
-      `;
-      document.getElementById(`test-${prefix}-${lessonId}`).innerHTML = html;
-    }
-
-    function checkTestAnswer(chosen, correct, q) {
-      if (chosen === correct) {
-        currentTest.correct++;
-        alert("To‘g‘ri!");
-      } else {
-        alert(`Xato! To‘g‘ri: ${correct}`);
-      }
-      currentTest.q++;
-      showTestQuestion();
     }
 
     // Boshlash
