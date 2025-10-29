@@ -25,7 +25,7 @@
 <body>
   <div class="container">
     <h1>Nurillo Teacherman</h1>
-    <p style="text-align:center;">Braille o‘qish, yozish va o‘yinlar</p>
+    <p style="text-align:center;">Braille o‘qish va yozish (Oyna usuli)</p>
 
     <div class="menu">
       <div class="btn" onclick="show('translate')">Tarjima</div>
@@ -38,13 +38,13 @@
 
     <!-- Tarjima -->
     <div id="translate" class="section active">
-      <h3>Matn ↔ Braille</h3>
-      <textarea id="text-input" placeholder="SALOM yozing yoki 1-2-3, 1-5"></textarea>
-      <button class="btn" onclick="translateText()">Tarjima qilish</button>
+      <h3>Matn → Braille</h3>
+      <textarea id="text-input" placeholder="SALOM"></textarea>
+      <button class="btn" onclick="translateText()">Tarjima</button>
       <div id="translate-result" class="result"></div>
     </div>
 
-    <!-- O‘qish o‘rganish -->
+    <!-- O‘qish -->
     <div id="learn-read" class="section">
       <h3>O‘qishni o‘rganamiz</h3>
       <p id="read-letter"></p>
@@ -54,7 +54,7 @@
       <div id="read-result" class="result"></div>
     </div>
 
-    <!-- Yozish o‘rganish -->
+    <!-- Yozish -->
     <div id="learn-write" class="section">
       <h3>Yozishni o‘rganamiz</h3>
       <p id="write-letter"></p>
@@ -69,8 +69,8 @@
       <h3>O‘yin: O‘qish</h3>
       <p id="game-read-letter"></p>
       <div class="braille-grid" id="game-read-grid"></div>
-      <button class="btn" onclick="checkGameRead()">Javob berish</button>
-      <button class="btn refresh-btn" onclick="startGameRead()">Yangi harf</button>
+      <button class="btn" onclick="checkGameRead()">Javob</button>
+      <button class="btn refresh-btn" onclick="startGameRead()">Yangi</button>
       <div id="game-read-result" class="result"></div>
     </div>
 
@@ -79,30 +79,30 @@
       <h3>O‘yin: Yozish</h3>
       <p id="game-write-letter"></p>
       <div class="braille-grid" id="game-write-grid"></div>
-      <button class="btn" onclick="checkGameWrite()">Javob berish</button>
-      <button class="btn refresh-btn" onclick="startGameWrite()">Yangi harf</button>
+      <button class="btn" onclick="checkGameWrite()">Javob</button>
+      <button class="btn refresh-btn" onclick="startGameWrite()">Yangi</button>
       <div id="game-write-result" class="result"></div>
     </div>
 
     <!-- Statistikalar -->
     <div id="stats" class="section">
       <h3>Statistikalar</h3>
-      <div class="stats" id="stats-content">Yuklanmoqda...</div>
+      <div class="stats" id="stats-content"></div>
     </div>
   </div>
 
   <script>
-    // SIZNING JADVALINGIZ — 100% TO‘G‘RI
-    const kodlar = {
+    // BRAILLE KODLARI (o‘qish uchun — chapda 1-2-3)
+    const KODLAR = {
       'A': '1', 'B': '1-2', 'D': '1-4-5', 'E': '1-5',
       'F': '1-2-4', 'G': '1-2-4-5', 'H': '1-4-5-6', 'I': '2-4', 'J': '2-4-5',
       'K': '1-3', 'L': '1-2-3', 'M': '1-3-4', 'N': '1-3-4-5', 'O': '1-3-5',
       'P': '1-2-3-4', 'Q': '1-3-4-5-6', 'R': '1-2-3-5', 'S': '2-3-4', 'T': '2-3-4-5',
       'U': '1-2-6', 'V': '2-4-5-6', 'X': '1-2-5',
-      'Y': '1-2-3-4-6', 'Z': '1-3-5-6', "G'": '1-2-4-5-6', "CH": '1-2-3-4-5',
-      "SH": '1-5-6', "O'": '1-2-3-6', "NG": '1-3-4-5-1-2-4-5'
+      'Y': '1-2-3-4-6', 'Z': '1-3-5-6'
     };
 
+    // YOZISH UCHUN: 1-2-3 → o‘ng ustun (1-2-3), 4-5-6 → chap ustun (4-5-6)
     const MIRROR = {1:4, 2:5, 3:6, 4:1, 5:2, 6:3};
 
     let state = { score: 0, correct: 0, wrong: 0, currentLetter: '', expected: [], selected: [] };
@@ -116,31 +116,7 @@
       if (section === 'game-write') startGameWrite();
     }
 
-    function translateText() {
-      const input = document.getElementById('text-input').value.trim().toUpperCase();
-      let result = '';
-      if (/^[0-9,\-/\s]+$/.test(input)) {
-        result = brailleToText(input);
-      } else {
-        result = textToBraille(input);
-      }
-      document.getElementById('translate-result').innerHTML = `<b>Natija:</b> ${result}`;
-    }
-
-    function textToBraille(text) {
-      return text.split('').map(c => kodlar[c] || '?').join(', ');
-    }
-
-    function brailleToText(braille) {
-      const parts = braille.split(/[\s,]+/).filter(Boolean);
-      return parts.map(p => {
-        if (p === '/') return ' ';
-        const mapped = p.split('-').map(n => MIRROR[parseInt(n)] || parseInt(n)).join('-');
-        return Object.entries(kodlar).find(([k,v]) => v === mapped)?.[0] || '?';
-      }).join('');
-    }
-
-    function createBrailleGrid(id, mode = 'read') {
+    function createGrid(id, mode = 'read') {
       const grid = document.getElementById(id);
       grid.innerHTML = '';
       const order = mode === 'write' ? [4,1,5,2,6,3] : [1,4,2,5,3,6];
@@ -157,26 +133,26 @@
     function toggleDot(dot) {
       dot.classList.toggle('active');
       const num = parseInt(dot.dataset.num);
-      if (dot.classList.contains('active')) {
-        if (!state.selected.includes(num)) state.selected.push(num);
+      if (dot.classList.contains('active') && !state.selected.includes(num)) {
+        state.selected.push(num);
       } else {
         state.selected = state.selected.filter(n => n !== num);
       }
     }
 
     function randomLetter() {
-      const letters = Object.keys(kodlar);
+      const letters = Object.keys(KODLAR);
       return letters[Math.floor(Math.random() * letters.length)];
     }
 
-    // O‘qish
+    // O‘QISH
     function startLearnRead() {
       const letter = randomLetter();
       state.currentLetter = letter;
-      state.expected = kodlar[letter].split('-').map(Number).sort((a,b)=>a-b);
+      state.expected = KODLAR[letter].split('-').map(Number).sort((a,b)=>a-b);
       state.selected = [];
-      document.getElementById('read-letter').innerHTML = `Harf: <b>${letter}</b> → Kod: <b>${kodlar[letter]}</b>`;
-      createBrailleGrid('read-grid', 'read');
+      document.getElementById('read-letter').innerHTML = `Harf: <b>${letter}</b> → <b>${KODLAR[letter]}</b>`;
+      createGrid('read-grid', 'read');
       document.getElementById('read-result').innerHTML = '';
     }
 
@@ -192,18 +168,16 @@
       }
     }
 
-    // Yozish
+    // YOZISH
     function startLearnWrite() {
       const letter = randomLetter();
       state.currentLetter = letter;
-      const readCode = kodlar[letter].split('-').map(Number);
+      const readCode = KODLAR[letter].split('-').map(Number);
       const writeCode = readCode.map(n => MIRROR[n]);
-      const writeCodeStr = writeCode.sort((a,b)=>a-b).join('-');
       state.expected = writeCode.sort((a,b)=>a-b);
       state.selected = [];
-      document.getElementById('write-letter').innerHTML = 
-        `Harf: <b>${letter}</b> → Yozing (o‘ngdan): <b>${writeCodeStr}</b>`;
-      createBrailleGrid('write-grid', 'write');
+      document.getElementById('write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing: <b>${state.expected.join('-')}</b>`;
+      createGrid('write-grid', 'write');
       document.getElementById('write-result').innerHTML = '';
     }
 
@@ -219,73 +193,22 @@
       }
     }
 
-    // O‘yin: O‘qish
-    function startGameRead() {
-      const letter = randomLetter();
-      state.currentLetter = letter;
-      state.expected = kodlar[letter].split('-').map(Number).sort((a,b)=>a-b);
-      state.selected = [];
-      document.getElementById('game-read-letter').innerHTML = `Harf: <b>${letter}</b>`;
-      createBrailleGrid('game-read-grid', 'read');
-      document.getElementById('game-read-result').innerHTML = '';
+    // O‘yinlar
+    function startGameRead() { startLearnRead(); document.getElementById('game-read-letter').innerHTML = document.getElementById('read-letter').innerHTML; createGrid('game-read-grid', 'read'); }
+    function checkGameRead() { checkRead(); document.getElementById('game-read-result').innerHTML = document.getElementById('read-result').innerHTML; if (document.getElementById('read-result').innerHTML.includes('To‘g‘ri')) { state.score += 10; state.correct++; saveStats(); setTimeout(startGameRead, 1500); } else { state.wrong++; saveStats(); } }
+    function startGameWrite() { startLearnWrite(); document.getElementById('game-write-letter').innerHTML = document.getElementById('write-letter').innerHTML; createGrid('game-write-grid', 'write'); }
+    function checkGameWrite() { checkWrite(); document.getElementById('game-write-result').innerHTML = document.getElementById('write-result').innerHTML; if (document.getElementById('write-result').innerHTML.includes('To‘g‘ri')) { state.score += 10; state.correct++; saveStats(); setTimeout(startGameWrite, 1500); } else { state.wrong++; saveStats(); } }
+
+    function translateText() {
+      const text = document.getElementById('text-input').value.toUpperCase();
+      const result = text.split('').map(c => KODLAR[c] || '?').join(', ');
+      document.getElementById('translate-result').innerHTML = `<b>Braille:</b> ${result}`;
     }
 
-    function checkGameRead() {
-      const selected = [...state.selected].sort((a,b)=>a-b);
-      const res = document.getElementById('game-read-result');
-      if (JSON.stringify(selected) === JSON.stringify(state.expected)) {
-        state.score += 10;
-        state.correct += 1;
-        res.innerHTML = `To‘g‘ri! (+10 ball) Jami: ${state.score}`;
-        saveStats();
-        setTimeout(startGameRead, 1500);
-      } else {
-        state.wrong += 1;
-        res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`;
-        saveStats();
-      }
-    }
-
-    // O‘yin: Yozish
-    function startGameWrite() {
-      const letter = randomLetter();
-      state.currentLetter = letter;
-      const readCode = kodlar[letter].split('-').map(Number);
-      const writeCode = readCode.map(n => MIRROR[n]);
-      state.expected = writeCode.sort((a,b)=>a-b);
-      state.selected = [];
-      document.getElementById('game-write-letter').innerHTML = `Harf: <b>${letter}</b> → Yozing (o‘ngdan)`;
-      createBrailleGrid('game-write-grid', 'write');
-      document.getElementById('game-write-result').innerHTML = '';
-    }
-
-    function checkGameWrite() {
-      const selected = [...state.selected].sort((a,b)=>a-b);
-      const res = document.getElementById('game-write-result');
-      if (JSON.stringify(selected) === JSON.stringify(state.expected)) {
-        state.score += 10;
-        state.correct += 1;
-        res.innerHTML = `To‘g‘ri! (+10 ball) Jami: ${state.score}`;
-        saveStats();
-        setTimeout(startGameWrite, 1500);
-      } else {
-        state.wrong += 1;
-        res.innerHTML = `Xato. To‘g‘ri: ${state.expected.join('-')}`;
-        saveStats();
-      }
-    }
-
-    function saveStats() {
-      localStorage.setItem('braille_stats', JSON.stringify(state));
-    }
-
+    function saveStats() { localStorage.setItem('braille_stats', JSON.stringify(state)); }
     function showStats() {
-      const saved = JSON.parse(localStorage.getItem('braille_stats') || '{}');
-      document.getElementById('stats-content').innerHTML = `
-        Ballar: <b>${saved.score || 0}</b><br>
-        To‘g‘ri javoblar: <b>${saved.correct || 0}</b><br>
-        Xato javoblar: <b>${saved.wrong || 0}</b>
-      `;
+      const s = JSON.parse(localStorage.getItem('braille_stats') || '{}');
+      document.getElementById('stats-content').innerHTML = `Ball: <b>${s.score||0}</b> | To‘g‘ri: <b>${s.correct||0}</b> | Xato: <b>${s.wrong||0}</b>`;
       show('stats');
     }
 
